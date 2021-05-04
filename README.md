@@ -45,3 +45,9 @@ The below are the libraries used in the analysis
 # Combining DataBases
 - used Pandas left join to merge the dataframes
 - dropped columns to show only location of the city assoicated with the team, team name, average salary, average age, and average city temp
+
+# Turn into JSON
+- create connection using Mongo module
+- copy df into the collection variable
+- insert data for each row into the df
+- for loop will print each 'document' 
