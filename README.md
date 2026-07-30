@@ -60,4 +60,55 @@ The below are the libraries used in the analysis
 - create connection using Mongo module
 - copy df into the collection variable
 - insert data for each row into the df
-- for loop will print each 'document' 
+- for loop will print each 'document'
+
+---
+
+# `sportsetl` — generalized multi-league / multi-season pipeline
+
+The original notebook is NBA-only and single-season. The `sportsetl/` package
+refactors that same Extract → Transform → Load flow into reusable, config-driven
+code so it can incorporate **other leagues (NFL included out of the box)** and
+**aggregate across any number of seasons**.
+
+### Layout
+- `sportsetl/config.py` — `LeagueConfig` + `Team` definitions. Adding a league or
+  season is a **data change here**, not a code change. Ships with full NBA (30)
+  and NFL (32) team → city maps, including weather-city overrides
+  (e.g. Warriors → San Francisco, Bills → Orchard Park).
+- `sportsetl/extract.py` — one function per source: salary from CSV, age via
+  `basketball_reference` **or** `pro_football_reference` scrapers, temperature via
+  the OpenWeather API. Sources are pluggable via the `AGE_SOURCES` registry.
+- `sportsetl/pipeline.py` — `ETLPipeline` builds one (league, season); `aggregate()`
+  stacks many into a single long DataFrame with `League` / `Season` columns;
+  `correlation_matrix()` computes the salary/age/temp correlations.
+- `sportsetl/plots.py` — renders a labelled correlation heatmap (matplotlib).
+- `run_analysis.py` — entrypoint (offline demo mode + `--live` ETL mode).
+
+### Run it
+```bash
+# Offline demo — uses the cached aggregated CSV, no network/keys needed
+python run_analysis.py
+
+# Live ETL across leagues and seasons (needs network + OpenWeather key)
+python run_analysis.py --live NBA:2017-18 NBA:2018-19 NFL:2021
+```
+Outputs (`output/`): `aggregated.csv`, `correlation_matrix.csv`,
+`correlation_matrix.png`.
+
+### Cross-league aggregation note
+Salaries are **z-scored within each (league, season)** before pooling, so leagues
+on very different pay scales (NBA vs NFL) can be combined without the
+bigger-money league dominating the correlation. Per-league / per-season matrices
+are available via `correlation_matrix(df, by="League")` / `by="Season"`.
+
+### Salary / Age / Temp correlation — NBA 2017-18
+|        | Salary | Age  | Temp |
+|--------|--------|------|------|
+| Salary | 1.00   | 0.65 | 0.01 |
+| Age    | 0.65   | 1.00 | 0.11 |
+| Temp   | 0.01   | 0.11 | 1.00 |
+
+Salary and roster age are **moderately correlated (0.65)** — older, veteran teams
+cost more. City temperature is **uncorrelated** with both (~0.01 / 0.11): where a
+team plays has no bearing on how it's paid or aged.
