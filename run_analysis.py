@@ -30,6 +30,11 @@ OUTPUT_DIR = "output"
 DEFAULT_CACHED = ["Resources/nba_2017-18_aggregated.csv"]
 
 
+def _slug(value: str) -> str:
+    """Filesystem-safe token for a league code or season label."""
+    return "".join(c if c.isalnum() else "-" for c in str(value)).strip("-")
+
+
 def parse_specs(items: list[str]) -> list[tuple[str, str]]:
     specs = []
     for item in items:
@@ -67,19 +72,39 @@ def main() -> None:
     print(f"\nAggregated dataset ({len(df)} rows) -> {combined_path}")
     print(df.head(10).to_string(index=False))
 
+    leagues = ", ".join(sorted(df["League"].unique()))
+
+    # ---- overall matrix + heatmap ----------------------------------------- #
     corr = correlation_matrix(df)
     corr_path = os.path.join(OUTPUT_DIR, "correlation_matrix.csv")
     corr.to_csv(corr_path)
     print("\nCorrelation matrix (salary z-scored within league+season):")
     print(corr.round(3).to_string())
-
-    leagues = ", ".join(sorted(df["League"].unique()))
     png = plot_correlation_heatmap(
         corr,
         os.path.join(OUTPUT_DIR, "correlation_matrix.png"),
         title=f"Salary / Age / Temp correlation -- {leagues}",
     )
     print(f"\nHeatmap -> {png}")
+
+    # ---- per-league / per-season breakdowns ------------------------------- #
+    # Only emitted when the data actually spans more than one group, so a
+    # single-league single-season run stays clean.
+    for dim in ("League", "Season"):
+        groups = df[dim].nunique()
+        if groups < 2:
+            continue
+        print(f"\nPer-{dim.lower()} breakdown ({groups} groups):")
+        for key, sub_corr in correlation_matrix(df, by=dim).items():
+            print(f"\n[{dim} = {key}]")
+            print(sub_corr.round(3).to_string())
+            out = os.path.join(
+                OUTPUT_DIR, f"correlation_{dim.lower()}_{_slug(key)}.png"
+            )
+            plot_correlation_heatmap(
+                sub_corr, out, title=f"Salary / Age / Temp -- {dim} {key}"
+            )
+            print(f"  heatmap -> {out}")
 
 
 if __name__ == "__main__":

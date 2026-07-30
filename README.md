@@ -94,7 +94,21 @@ python run_analysis.py
 python run_analysis.py --live NBA:2017-18 NBA:2018-19 NFL:2021
 ```
 Outputs (`output/`): `aggregated.csv`, `correlation_matrix.csv`,
-`correlation_matrix.png`.
+`correlation_matrix.png`. When the run spans **more than one league or season**,
+it also emits a per-group heatmap for each
+(`correlation_league_<CODE>.png`, `correlation_season_<LABEL>.png`) so you can
+compare, e.g., NBA vs NFL side by side. A single-league single-season run skips
+these and stays clean.
+
+### Adding NFL (or any league) — one file away
+The 32-team NFL map and the pro-football-reference age scraper already ship. To
+run NFL live you only need to supply a salary CSV. Scaffold a correctly-shaped
+template straight from the config (team names line up automatically):
+```bash
+python scripts/make_salary_template.py NFL 2021
+# -> Resources/NFL_2021_salary.csv  (fill in the SALARY column, then:)
+python run_analysis.py --live NFL:2021
+```
 
 ### Cross-league aggregation note
 Salaries are **z-scored within each (league, season)** before pooling, so leagues
