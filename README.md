@@ -7,6 +7,16 @@ Salary data was pulled from a csv file found on Kaggle
 Temperature data was pulled from OpenWeather API
 Age data was pulled via webscraping basketballreference.com
 
+## Web data source notes
+The exact endpoints used in the notebooks (`Database.ipynb` / `Database 106.ipynb`):
+
+- **Age (web scrape)** — `https://www.basketball-reference.com/leagues/NBA_2018_per_minute.html`
+  - Scraped with `requests` + `BeautifulSoup`, and the table parsed via `pandas.read_html`.
+  - This is the **2017-18 NBA "Per Minute" stats** table; only player name, team, and age were kept.
+- **Temperature (API)** — `http://api.openweathermap.org/data/2.5/weather?q=<city>&units=imperial&appid=<key>`
+  - Note: the code uses the **current-weather** endpoint (`/data/2.5/weather`), not the historical endpoint mentioned in the narrative; "Golden State" is remapped to "San Francisco" for the lookup.
+- **Salary (local CSV)** — `Resources/nba_2017_salary.csv` (originally sourced from Kaggle, 2017-18 season). Not scraped; read locally with pandas.
+
 
 # Importing Libraries
 The below are the libraries used in the analysis
