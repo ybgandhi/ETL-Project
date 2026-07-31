@@ -117,9 +117,36 @@ pinned with `team_col` / `salary_col` once you've confirmed the live headers.
 python run_analysis.py --live NFL:2021    # scrapes salaries + ages, no CSV needed
 ```
 
-> **Note:** scraping spotrac requires outbound access to `spotrac.com`. Some
-> managed/CI environments block it at the egress policy (HTTP 403 on CONNECT);
-> run from a network that permits it, or fall back to the CSV path below.
+> **Note:** scraping requires outbound access to the salary host. Some
+> managed/CI environments block `spotrac.com` / `overthecap.com` at the egress
+> policy (HTTP 403 on CONNECT); run from a network that permits it (see below),
+> or fall back to the CSV path.
+
+### Running the NFL pipeline live (locally)
+The salary hosts are often blocked in managed/CI sandboxes, so run this on a
+machine with normal outbound access:
+```bash
+pip install -r requirements.txt          # pandas, lxml, matplotlib, requests, ...
+export OPENWEATHER_API_KEY=your_key       # or create api_keys.py: weather_api_key = "..."
+python run_analysis.py --live NFL:2021
+```
+This scrapes salaries (spotrac) and ages (pro-football-reference) and pulls city
+temps from OpenWeather. Without a weather key it still runs — temperature is left
+blank and salary/age are unaffected.
+
+**Using overthecap instead of spotrac** — overthecap's cap page is *team-level*
+(one row per team), which the same scraper handles. Point NFL at it in
+`config.py` and pin the salary column, since that page has several "cap" columns:
+```python
+NFL = LeagueConfig(
+    ...,
+    salary_source="web",
+    salary_url_template="https://overthecap.com/salary-cap-space",
+    salary_col="Active",   # e.g. active cap spending -- set to the exact header you want
+)
+```
+`salary_col` / `team_col` are optional config overrides; leave them `None` to
+auto-detect by header keyword.
 
 ### Fallback — supply salaries as a CSV instead
 If you'd rather not scrape (or the host is blocked), scaffold a correctly-shaped

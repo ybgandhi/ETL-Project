@@ -60,6 +60,12 @@ def main() -> None:
             from api_keys import weather_api_key
         except ImportError:
             weather_api_key = os.environ.get("OPENWEATHER_API_KEY")
+        if not weather_api_key:
+            print(
+                "  note: no OpenWeather key found (api_keys.weather_api_key or "
+                "$OPENWEATHER_API_KEY) -- temperature will be blank; "
+                "salary/age still run."
+            )
         specs = parse_specs(args.specs) or [("NBA", "2017-18")]
         print(f"Running live ETL for: {specs}")
         df = aggregate(specs, weather_api_key=weather_api_key)

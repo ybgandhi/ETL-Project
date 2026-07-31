@@ -287,7 +287,12 @@ def salary_for_league(
     if league.salary_source == "web":
         if not league.salary_url_template:
             raise ValueError(f"{league.code} salary_source=web but no URL template")
-        return salary_from_web(league.salary_url(season_end_year), league.teams)
+        return salary_from_web(
+            league.salary_url(season_end_year),
+            league.teams,
+            team_col=league.team_col,
+            salary_col=league.salary_col,
+        )
     return salary_from_csv(league.salary_csv(season, season_end_year))
 
 

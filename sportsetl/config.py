@@ -47,6 +47,11 @@ class LeagueConfig:
     teams: tuple[Team, ...] = field(default_factory=tuple)
     salary_source: str = "csv"      # "csv" (local file) or "web" (scrape)
     salary_url_template: Optional[str] = None  # {end_year} substituted; web only
+    # Optional column overrides for the web scraper. Leave None to auto-detect
+    # by header keyword; pin them once you've confirmed a site's exact headers
+    # (e.g. overthecap's cap page has several "cap" columns -- name the right one).
+    salary_col: Optional[str] = None
+    team_col: Optional[str] = None
 
     def age_url(self, season_end_year: int) -> str:
         return self.age_url_template.format(end_year=season_end_year)
