@@ -1,0 +1,6 @@
+pandas
+numpy
+matplotlib
+requests
+lxml        # HTML table parsing for pandas.read_html (age + salary scrapers)
+pymongo     # optional: load step in the original notebooks

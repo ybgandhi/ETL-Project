@@ -100,15 +100,40 @@ it also emits a per-group heatmap for each
 compare, e.g., NBA vs NFL side by side. A single-league single-season run skips
 these and stays clean.
 
-### Adding NFL (or any league) — one file away
-The 32-team NFL map and the pro-football-reference age scraper already ship. To
-run NFL live you only need to supply a salary CSV. Scaffold a correctly-shaped
-template straight from the config (team names line up automatically):
+### Salary sources — CSV **or** web scrape
+Each league declares its salary source in `config.py`:
+- **NBA** → `csv` (the Kaggle file, averaged to team level).
+- **NFL** → `web`, scraped from spotrac's player-level contracts table
+  (`https://www.spotrac.com/nfl/contracts`).
+
+The web scraper (`extract.salary_from_web`) auto-detects the team and salary
+columns by header keyword, parses currency strings (`$1,234,567`, `$12.5M`),
+resolves each scraped team token to the config via full name / nickname / city,
+and averages to the team level. Any token it can't resolve is printed (and
+dropped) so a site-specific alias is easy to spot. Column detection can be
+pinned with `team_col` / `salary_col` once you've confirmed the live headers.
+
+```bash
+python run_analysis.py --live NFL:2021    # scrapes salaries + ages, no CSV needed
+```
+
+> **Note:** scraping spotrac requires outbound access to `spotrac.com`. Some
+> managed/CI environments block it at the egress policy (HTTP 403 on CONNECT);
+> run from a network that permits it, or fall back to the CSV path below.
+
+### Fallback — supply salaries as a CSV instead
+If you'd rather not scrape (or the host is blocked), scaffold a correctly-shaped
+CSV straight from the config (team names line up automatically), fill it, and
+switch that league's `salary_source` back to `"csv"`:
 ```bash
 python scripts/make_salary_template.py NFL 2021
-# -> Resources/NFL_2021_salary.csv  (fill in the SALARY column, then:)
-python run_analysis.py --live NFL:2021
+# -> Resources/NFL_2021_salary.csv  (fill in the SALARY column)
 ```
+
+### Tests
+`tests/test_salary_web.py` drives the scraper's parsing/aggregation against a
+local HTML fixture (currency parsing, team resolution, team-level means) — no
+network required. Run with `python tests/test_salary_web.py` (or `pytest tests/`).
 
 ### Cross-league aggregation note
 Salaries are **z-scored within each (league, season)** before pooling, so leagues

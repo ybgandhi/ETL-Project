@@ -47,7 +47,7 @@ class ETLPipeline:
     def run(self) -> pd.DataFrame:
         end_year = season_end_year(self.season)
 
-        salary = extract.salary_from_csv(self.league.salary_csv(self.season, end_year))
+        salary = extract.salary_for_league(self.league, self.season, end_year)
         age = extract.age_for_league(self.league, end_year)
 
         # Build the team spine from config so every league lines up on age_abbr.

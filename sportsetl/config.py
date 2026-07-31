@@ -45,6 +45,8 @@ class LeagueConfig:
     age_url_template: str           # {end_year} is substituted per season
     salary_csv_template: str        # {code}/{season}; {season_end} available too
     teams: tuple[Team, ...] = field(default_factory=tuple)
+    salary_source: str = "csv"      # "csv" (local file) or "web" (scrape)
+    salary_url_template: Optional[str] = None  # {end_year} substituted; web only
 
     def age_url(self, season_end_year: int) -> str:
         return self.age_url_template.format(end_year=season_end_year)
@@ -53,6 +55,11 @@ class LeagueConfig:
         return self.salary_csv_template.format(
             code=self.code, season=season, season_end=season_end_year
         )
+
+    def salary_url(self, season_end_year: int) -> str:
+        if not self.salary_url_template:
+            raise ValueError(f"{self.code} has no salary_url_template")
+        return self.salary_url_template.format(end_year=season_end_year)
 
     def team_by_abbr(self, abbr: str) -> Optional[Team]:
         for t in self.teams:
@@ -153,6 +160,11 @@ NFL = LeagueConfig(
     age_url_template="https://www.pro-football-reference.com/years/{end_year}/",
     salary_csv_template="Resources/{code}_{season}_salary.csv",
     teams=NFL_TEAMS,
+    # Salaries scraped from spotrac's player-level contracts table. The
+    # /nfl/contracts page reflects current active contracts; for a specific
+    # historical season, point this at that season's spotrac cap-table URL.
+    salary_source="web",
+    salary_url_template="https://www.spotrac.com/nfl/contracts",
 )
 
 
